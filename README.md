@@ -1,5 +1,19 @@
 ## tsshd: UDP-based SSH Server with Roaming Support
 
+> **This is a fork of [trzsz/tsshd](https://github.com/trzsz/tsshd) with a Windows ConPTY input fix.**
+
+### What's Changed
+
+**Problem:** On Windows, all keyboard and mouse input is broken when connecting via `tssh --udp` to a zellij (or any interactive) session. Keystrokes appear as raw characters, mouse events render as garbled text, and the session is effectively unusable. Regular SSH (`ssh -t`) works perfectly.
+
+**Root Cause:** The underlying Go ConPTY library (`github.com/UserExistsError/conpty`) creates Windows pseudo console with `flags=0` and does not call `SetConsoleMode` to set `ENABLE_VIRTUAL_TERMINAL_INPUT`. Additionally, tsshd launches the child process (e.g., zellij) directly inside ConPTY without an intermediate shell, so console modes are never properly initialized.
+
+**Fix:** Modified `getSessionStartCmd()` in `tsshd/session.go` — on Windows, all commands are now wrapped through `PowerShell -NoProfile -Command` instead of `cmd /c`. This matches Windows OpenSSH sshd's behavior, where PowerShell properly initializes console modes before the child process starts.
+
+**Changed file:** `tsshd/session.go` — 1 function, ~7 lines changed.
+
+---
+
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://choosealicense.com/licenses/mit/)
 [![GitHub Release](https://img.shields.io/github/v/release/trzsz/tsshd)](https://github.com/trzsz/tsshd/releases)
 [![WebSite](https://img.shields.io/badge/WebSite-https%3A%2F%2Ftrzsz.github.io%2Ftsshd-blue?style=flat)](https://trzsz.github.io/tsshd)
