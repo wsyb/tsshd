@@ -928,7 +928,7 @@ func getSessionStartCmd(msg *startMessage) (*exec.Cmd, error) {
 				}
 			}
 		}
-		if wrap || runtime.GOOS == "windows" {
+		if wrap {
 			re := regexp.MustCompile(`\s`)
 			var buf strings.Builder
 			buf.WriteString(name)
