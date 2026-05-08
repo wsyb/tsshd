@@ -928,7 +928,7 @@ func getSessionStartCmd(msg *startMessage) (*exec.Cmd, error) {
 				}
 			}
 		}
-		if wrap {
+		if wrap || runtime.GOOS == "windows" {
 			re := regexp.MustCompile(`\s`)
 			var buf strings.Builder
 			buf.WriteString(name)
@@ -941,12 +941,13 @@ func getSessionStartCmd(msg *startMessage) (*exec.Cmd, error) {
 				}
 			}
 			if runtime.GOOS == "windows" {
-				name = "cmd"
-				args = []string{"/c", buf.String()}
-			} else {
-				name = "sh"
-				args = []string{"-c", buf.String()}
+				shell, _ := getUserShell()
+				cmd := exec.Command(shell, "-NoProfile", "-Command", buf.String())
+				cmd.Env = envs
+				return cmd, nil
 			}
+			name = "sh"
+			args = []string{"-c", buf.String()}
 		}
 		cmd := exec.Command(name, args...)
 		cmd.Env = envs
